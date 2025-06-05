@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Planader">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="apple-touch-icon" sizes="256x256" href="images/icon-256.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="images/icon-512.png">
+  <title>Planader - Calendar Planner</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      color: #333;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-bottom: 2px solid #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    header .brand {
+      position: absolute;
+      right: 1rem;
+      top: 1rem;
+      font-size: 0.75rem;
+      color: #888;
+      font-weight: normal;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.5rem;
+    }
+
+    .controls button {
+      padding: 0.5rem 1.2rem;
+      font-size: 1rem;
+      background-color: #6a5acd;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .controls button:hover {
+      background-color: #5a4dcf;
+    }
+
+    .weekday-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      background: #f0f0f0;
+      border-bottom: 1px solid #ccc;
+      font-size: 0.75rem;
+    }
+
+    .weekday-labels div {
+      padding: 0.5rem;
+      border-right: 1px solid #ccc;
+    }
+
+    #calendar {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-template-rows: repeat(6, 1fr);
+      gap: 1px;
+    }
+
+    .day {
+      background: #fff;
+      border: 1px solid #ccc;
+      height: 100px;
+      padding: 2px;
+      font-size: 0.6rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: background-color 0.2s;
+    }
+
+    .day.filled {
+      background-color: #e0d1ff;
+    }
+
+    .day.today {
+      border: 2px solid #007BFF;
+      box-shadow: inset 0 0 0 2px #007BFF;
+    }
+
+    .day strong {
+      font-size: 0.6rem;
+      color: #666;
+      position: absolute;
+      top: 2px;
+      left: 4px;
+    }
+
+    .day textarea {
+      width: 100%;
+      height: 100%;
+      font-size: 0.6rem;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      padding: 18px 4px 4px 4px;
+      resize: none;
+      line-height: 1.2;
+      white-space: pre-wrap;
+      overflow-y: auto;
+    }
+
+    .day textarea:focus {
+      outline: none;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      color: #aaa;
+      padding: 0.5rem 0;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span id="monthHeader">JUNE</span>
+    <span class="brand">MF Software</span>
+  </header>
+  <div class="controls">
+    <button onclick="changeMonth(-1)">&lt; Prev</button>
+    <button onclick="changeMonth(1)">Next &gt;</button>
+  </div>
+  <div class="weekday-labels">
+    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+  </div>
+  <div id="calendar"></div>
+  <footer>Version 1.0</footer>
+
+  <script>
+    const calendar = document.getElementById('calendar');
+    const header = document.getElementById('monthHeader');
+
+    let viewDate = new Date();
+
+    function getMonthName(monthIndex) {
+      return new Date(2000, monthIndex).toLocaleString('default', { month: 'long' }).toUpperCase();
+    }
+
+    function getStartDayIndex(year, month) {
+      const firstDay = new Date(year, month, 1);
+      const day = firstDay.getDay();
+      return day === 0 ? 6 : day - 1;
+    }
+
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function renderCalendar() {
+      calendar.innerHTML = '';
+      const year = viewDate.getFullYear();
+      const month = viewDate.getMonth();
+      const today = new Date();
+      const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+      header.textContent = getMonthName(month);
+
+      const startDayIndex = getStartDayIndex(year, month);
+      const daysInMonth = getDaysInMonth(year, month);
+
+      for (let i = 0; i < 42; i++) {
+        const day = document.createElement('div');
+        day.className = 'day';
+
+        if (i >= startDayIndex && i < startDayIndex + daysInMonth) {
+          const dayNum = i - startDayIndex + 1;
+          day.dataset.day = dayNum;
+
+          const key = `${year}-${month}-${dayNum}`;
+          const textarea = document.createElement('textarea');
+          textarea.value = localStorage.getItem(key) || '';
+
+          if (textarea.value.trim()) {
+            day.classList.add('filled');
+          }
+
+          textarea.addEventListener('input', () => {
+            localStorage.setItem(key, textarea.value);
+            if (textarea.value.trim()) {
+              day.classList.add('filled');
+            } else {
+              day.classList.remove('filled');
+            }
+          });
+
+          day.innerHTML = `<strong>${dayNum}</strong>`;
+          day.appendChild(textarea);
+
+          if (isCurrentMonth && dayNum === today.getDate()) {
+            day.classList.add('today');
+          }
+        }
+
+        calendar.appendChild(day);
+      }
+    }
+
+    function changeMonth(offset) {
+      viewDate.setMonth(viewDate.getMonth() + offset);
+      renderCalendar();
+    }
+
+    renderCalendar();
+  </script>
+</body>
+</html>
+
